@@ -16,6 +16,37 @@
 // box.
 // There are no graphics for this example. Box2D is meant to be used
 // with your rendering engine in your game engine.
+bool hit = false;
+bool callback( b2ShapeId, void* context )
+{
+	printf( "hit" );
+	hit = true;
+	return false;
+}
+int testOverlap( void )
+{
+	{
+		b2WorldDef worldDef = b2DefaultWorldDef();
+		b2WorldId world_id = b2CreateWorld( &worldDef );
+		b2BodyDef body_def = b2DefaultBodyDef();
+		body_def.type = b2_staticBody;
+		body_def.position = (b2Vec2){ 3.0f, 5.0f };
+		b2BodyId body_id = b2CreateBody( world_id, &body_def );
+		b2Polygon polygon = b2MakeSquare( 0.5f );
+		b2ShapeDef shape_def = b2DefaultShapeDef();
+		b2CreatePolygonShape( body_id, &shape_def, &polygon );
+		b2World_Step( world_id, 1. / 60., 4 );
+		b2Polygon test_polygon = b2MakeSquare( 0.4f );
+		// b2Transform tfm = { { 3.0f, 5.0f }, { 1.0f, 0.0f } };
+		//or even
+		b2Transform tfm =b2Body_GetTransform(body_id);
+		b2World_OverlapPolygon( world_id, &test_polygon, tfm, b2DefaultQueryFilter(), callback, NULL );
+		ENSURE( hit );
+		b2DestroyBody( body_id );
+		b2DestroyWorld( world_id );
+	}
+}
+
 int HelloWorld( void )
 {
 	// Construct a world object, which will hold and simulate the rigid bodies.
@@ -401,6 +432,7 @@ int WorldTest( void )
 	RUN_SUBTEST( TestWorldRecycle );
 	RUN_SUBTEST( TestWorldCoverage );
 	RUN_SUBTEST( TestSensor );
+	RUN_SUBTEST( testOverlap );
 
 	return 0;
 }
